@@ -1,4 +1,4 @@
-name: Build Mod Final Fix
+name: Build Mod Final V3
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Unzip and Fix Paths
+    - name: Unzip Source
       run: |
         set +e
         ZIP_FILE=$(ls *.zip | head -n 1)
@@ -28,19 +28,31 @@ jobs:
           echo "Error: No ZIP found"
           exit 1
         fi
-        echo "Descomprimiendo $ZIP_FILE..."
-        # Usamos unzip pero ignoramos el código de salida para que no detenga el build
         unzip -oq "$ZIP_FILE" -d . || true
-        echo "Descompresión finalizada (ignorando warnings de Windows)."
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Find and Move to Gradle Folder
+      run: |
+        GRADLE_DIR=$(find . -name gradlew -exec dirname {} \; | head -n 1)
+        if [ -z "$GRADLE_DIR" ]; then
+          echo "Error: gradlew not found"
+          exit 1
+        fi
+        echo "GRADLE_DIR=$GRADLE_DIR" >> $GITHUB_ENV
 
     - name: Build with Gradle
-      run: ./gradlew build || (echo "Build falló, intentando limpieza..." && ./gradlew clean build)
+      run: |
+        cd ${{ env.GRADLE_DIR }}
+        chmod +x gradlew
+        ./gradlew build
 
     - name: Upload Build Artifact
+      run: |
+        # Use a shell command to find the jar regardless of folder structure
+        JAR_PATH=$(find . -name "*.jar" | grep "build/libs" | head -n 1)
+        echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Mod-JAR
-        path: build/libs/*.jar
+        path: "**/*.jar"
