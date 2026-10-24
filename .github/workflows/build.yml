@@ -20,17 +20,17 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Unzip Source (Forced)
+    - name: Unzip Source (Fixed Name)
       run: |
-        if [ -f "isla-dragoncitos-mod-FULL_SOURCE.zip" ]; then
-          # -o fuerza la sobrescritura de archivos existentes sin preguntar
-          # -q modo silencioso para evitar warnings de rutas
-          unzip -oq isla-//dragoncitos-mod-FULL_SOURCE.zip -d .
-          echo "ZIP descomprimido y archivos forzados correctamente."
-        else
-          echo "Error: No se encontró el archivo ZIP en la raíz."
+        # Buscamos cualquier archivo que termine en .zip en la raíz para evitar errores de tipeo
+        ZIP_FILE=$(ls *.zip | head -n 1)
+        if [ -z "$ZIP_FILE" ]; then
+          echo "Error: No se encontró ningún archivo .zip en la raíz del repositorio."
           exit 1
         fi
+        echo "Descomprimiendo $ZIP_FILE..."
+        unzip -oq "$ZIP_FILE" -d .
+        echo "ZIP descomprimido correctamente."
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
