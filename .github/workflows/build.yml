@@ -19,15 +19,16 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        # Eliminamos la línea de cache: 'gradle' para evitar el error de archivos no encontrados
 
-    - name: Unzip Source
+    - name: Unzip Source (Forced)
       run: |
         if [ -f "isla-dragoncitos-mod-FULL_SOURCE.zip" ]; then
-          unzip isla-dragoncitos-mod-FULL_SOURCE.zip -d .
-          echo "ZIP descomprimido correctamente."
+          # -o fuerza la sobrescritura de archivos existentes sin preguntar
+          # -q modo silencioso para evitar warnings de rutas
+          unzip -oq isla-//dragoncitos-mod-FULL_SOURCE.zip -d .
+          echo "ZIP descomprimido y archivos forzados correctamente."
         else
-          echo "Error: No se encontró el archivo isla-dragoncitos-mod-FULL_SOURCE.zip en la raíz del repositorio."
+          echo "Error: No se encontró el archivo ZIP en la raíz."
           exit 1
         fi
 
