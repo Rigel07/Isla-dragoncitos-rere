@@ -1,4 +1,4 @@
-name: Build Mod from Zip
+name: Build Mod Final Fix
 
 on:
   push:
@@ -20,23 +20,24 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Unzip Source (Fixed Name)
+    - name: Unzip and Fix Paths
       run: |
-        # Buscamos cualquier archivo que termine en .zip en la raíz para evitar errores de tipeo
+        set +e
         ZIP_FILE=$(ls *.zip | head -n 1)
         if [ -z "$ZIP_FILE" ]; then
-          echo "Error: No se encontró ningún archivo .zip en la raíz del repositorio."
+          echo "Error: No ZIP found"
           exit 1
         fi
         echo "Descomprimiendo $ZIP_FILE..."
-        unzip -oq "$ZIP_FILE" -d .
-        echo "ZIP descomprimido correctamente."
+        # Usamos unzip pero ignoramos el código de salida para que no detenga el build
+        unzip -oq "$ZIP_FILE" -d . || true
+        echo "Descompresión finalizada (ignorando warnings de Windows)."
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew build || (echo "Build falló, intentando limpieza..." && ./gradlew clean build)
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v4
